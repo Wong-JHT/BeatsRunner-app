@@ -1,0 +1,110 @@
+Initialized native services in: /Users/suechangwong/.gradle/native
+Initialized jansi services in: /Users/suechangwong/.gradle/native
+Found daemon DaemonInfo{pid=31935, address=[d5517c35-7c9f-4d82-bd84-64085fd63b3b port:63418, addresses:[/127.0.0.1]], state=Idle, lastBusy=1770879665746, context=DefaultDaemonContext[uid=1749c5fa-7b1f-42f3-8c21-e18dbeb8fbbc,javaHome=/Applications/Android Studio Otter 2 Feature Drop 2025.2.2 Patch 1.app/Contents/jbr/Contents/Home,javaVersion=21,javaVendor=JetBrains s.r.o.,daemonRegistryDir=/Users/suechangwong/.gradle/daemon,pid=31935,idleTimeout=10800000,priority=NORMAL,applyInstrumentationAgent=true,nativeServicesMode=ENABLED,daemonOpts=-XX:MaxMetaspaceSize=512m,-XX:+HeapDumpOnOutOfMemoryError,-Xmx4096m,-Dfile.encoding=UTF-8,-Duser.country=CN,-Duser.language=zh,-Duser.variant]} however its context does not match the desired criteria.
+JVM is incompatible.
+Wanted: DaemonRequestContext{jvmCriteria=/Users/suechangwong/.sdkman/candidates/java/17.0.11-zulu/zulu-17.jdk/Contents/Home (no JDK specified, using current Java home), daemonOpts=[-XX:MaxMetaspaceSize=512m, -XX:+HeapDumpOnOutOfMemoryError, -Xmx4096m, -Dfile.encoding=UTF-8, -Duser.country=CN, -Duser.language=zh, -Duser.variant], applyInstrumentationAgent=true, nativeServicesMode=ENABLED, priority=NORMAL}
+Actual: DefaultDaemonContext[uid=1749c5fa-7b1f-42f3-8c21-e18dbeb8fbbc,javaHome=/Applications/Android Studio Otter 2 Feature Drop 2025.2.2 Patch 1.app/Contents/jbr/Contents/Home,javaVersion=21,javaVendor=JetBrains s.r.o.,daemonRegistryDir=/Users/suechangwong/.gradle/daemon,pid=31935,idleTimeout=10800000,priority=NORMAL,applyInstrumentationAgent=true,nativeServicesMode=ENABLED,daemonOpts=-XX:MaxMetaspaceSize=512m,-XX:+HeapDumpOnOutOfMemoryError,-Xmx4096m,-Dfile.encoding=UTF-8,-Duser.country=CN,-Duser.language=zh,-Duser.variant]
+
+  Looking for a different daemon...
+Found daemon DaemonInfo{pid=33668, address=[0ae6b9f7-96fc-43f7-a186-2dc0021875ec port:65003, addresses:[/127.0.0.1]], state=Idle, lastBusy=1770879655988, context=DefaultDaemonContext[uid=25d03b38-951a-4e63-ae27-e8ed0a0f2fba,javaHome=/Users/suechangwong/.sdkman/candidates/java/17.0.11-zulu/zulu-17.jdk/Contents/Home,javaVersion=17,javaVendor=Azul Systems, Inc.,daemonRegistryDir=/Users/suechangwong/.gradle/daemon,pid=33668,idleTimeout=10800000,priority=NORMAL,applyInstrumentationAgent=true,nativeServicesMode=ENABLED,daemonOpts=-XX:+HeapDumpOnOutOfMemoryError,-Xmx4g,-Dfile.encoding=UTF-8,-Duser.country=CN,-Duser.language=zh,-Duser.variant]} however its context does not match the desired criteria.
+At least one daemon option is different.
+Wanted: DaemonRequestContext{jvmCriteria=/Users/suechangwong/.sdkman/candidates/java/17.0.11-zulu/zulu-17.jdk/Contents/Home (no JDK specified, using current Java home), daemonOpts=[-XX:MaxMetaspaceSize=512m, -XX:+HeapDumpOnOutOfMemoryError, -Xmx4096m, -Dfile.encoding=UTF-8, -Duser.country=CN, -Duser.language=zh, -Duser.variant], applyInstrumentationAgent=true, nativeServicesMode=ENABLED, priority=NORMAL}
+Actual: DefaultDaemonContext[uid=25d03b38-951a-4e63-ae27-e8ed0a0f2fba,javaHome=/Users/suechangwong/.sdkman/candidates/java/17.0.11-zulu/zulu-17.jdk/Contents/Home,javaVersion=17,javaVendor=Azul Systems, Inc.,daemonRegistryDir=/Users/suechangwong/.gradle/daemon,pid=33668,idleTimeout=10800000,priority=NORMAL,applyInstrumentationAgent=true,nativeServicesMode=ENABLED,daemonOpts=-XX:+HeapDumpOnOutOfMemoryError,-Xmx4g,-Dfile.encoding=UTF-8,-Duser.country=CN,-Duser.language=zh,-Duser.variant]
+
+  Looking for a different daemon...
+The client will now receive all logging from the daemon (pid: 23048). The daemon log file: /Users/suechangwong/.gradle/daemon/8.14/daemon-23048.out.log
+Starting 20th build in daemon [uptime: 7 hrs 8 mins 11.932 secs, performance: 96%, GC rate: 0.00/s, heap usage: 2% of 4 GiB, non-heap usage: 33% of 512 MiB]
+Using 8 worker leases.
+Configuration on demand is an incubating feature.
+Now considering [/Users/suechangwong/Documents/workspace/BeatsRunner/BeatsRunner-app] as hierarchies to watch
+Watching the file system is configured to be enabled if available
+File system watching is active
+Starting Build
+Settings evaluated using settings file '/Users/suechangwong/Documents/workspace/BeatsRunner/BeatsRunner-app/settings.gradle.kts'.
+Using local directory build cache for the root build (location = /Users/suechangwong/.gradle/caches/build-cache-1, remove unused entries = after 7 days).
+Type-safe project accessors is an incubating feature.
+Projects loaded. Root project using build file '/Users/suechangwong/Documents/workspace/BeatsRunner/BeatsRunner-app/build.gradle.kts'.
+Included projects: [root project 'BeatRunner', project ':androidApp', project ':shared']
+Task path ':shared:compileCommonMainKotlinMetadata' matched project ':shared'
+
+> Configure project :
+Evaluating root project 'BeatRunner' using build file '/Users/suechangwong/Documents/workspace/BeatsRunner/BeatsRunner-app/build.gradle.kts'.
+Resolved plugin [id: 'com.android.application', version: '8.7.3', apply: false]
+Resolved plugin [id: 'com.android.library', version: '8.7.3', apply: false]
+Resolved plugin [id: 'org.jetbrains.kotlin.multiplatform', version: '2.1.0', apply: false]
+Resolved plugin [id: 'org.jetbrains.kotlin.android', version: '2.1.0', apply: false]
+Resolved plugin [id: 'org.jetbrains.kotlin.plugin.serialization', version: '2.1.0', apply: false]
+Resolved plugin [id: 'org.jetbrains.kotlin.plugin.compose', version: '2.1.0', apply: false]
+Resolved plugin [id: 'org.jetbrains.compose', version: '1.7.1', apply: false]
+Resolved plugin [id: 'app.cash.sqldelight', version: '2.0.2', apply: false]
+
+> Configure project :shared
+Evaluating project ':shared' using build file '/Users/suechangwong/Documents/workspace/BeatsRunner/BeatsRunner-app/shared/build.gradle.kts'.
+Resolved plugin [id: 'org.jetbrains.kotlin.multiplatform', version: '2.1.0']
+Resolved plugin [id: 'com.android.library', version: '8.7.3']
+Resolved plugin [id: 'org.jetbrains.kotlin.plugin.serialization', version: '2.1.0']
+Resolved plugin [id: 'app.cash.sqldelight', version: '2.0.2']
+Using Kotlin Gradle Plugin gradle85 variant
+Using default execution profile
+Task name matched 'compileCommonMainKotlinMetadata'
+Selected primary task 'compileCommonMainKotlinMetadata' from project :shared
+All projects evaluated.
+Tasks to be executed: [task ':shared:checkKotlinGradlePluginConfigurationErrors', task ':shared:generateCommonMainBeatRunnerDatabaseInterface', task ':shared:transformCommonMainDependenciesMetadata', task ':shared:compileCommonMainKotlinMetadata']
+Tasks that were excluded: []
+Resolve mutations for :shared:checkKotlinGradlePluginConfigurationErrors (Thread[Execution worker,5,main]) started.
+:shared:checkKotlinGradlePluginConfigurationErrors (Thread[Execution worker,5,main]) started.
+
+> Task :shared:checkKotlinGradlePluginConfigurationErrors SKIPPED
+Skipping task ':shared:checkKotlinGradlePluginConfigurationErrors' as task onlyIf 'errorDiagnostics are present' is false.
+Resolve mutations for :shared:generateCommonMainBeatRunnerDatabaseInterface (Thread[Execution worker,5,main]) started.
+:shared:generateCommonMainBeatRunnerDatabaseInterface (Thread[Execution worker,5,main]) started.
+
+> Task :shared:generateCommonMainBeatRunnerDatabaseInterface NO-SOURCE
+Skipping task ':shared:generateCommonMainBeatRunnerDatabaseInterface' as it has no source files and no previous output files.
+Resolve mutations for :shared:transformCommonMainDependenciesMetadata (Thread[Execution worker,5,main]) started.
+:shared:transformCommonMainDependenciesMetadata (Thread[Execution worker,5,main]) started.
+
+> Task :shared:transformCommonMainDependenciesMetadata UP-TO-DATE
+Variant Selection Exception: org.gradle.internal.component.resolution.failure.exception.VariantSelectionByAttributesException caused by Resolution Failure: org.gradle.internal.component.resolution.failure.type.AmbiguousVariantsFailure
+Caching disabled for task ':shared:transformCommonMainDependenciesMetadata' because:
+  Metadata Dependency Transformation Task doesn't benefit from caching as it doesn't have heavy load
+Skipping task ':shared:transformCommonMainDependenciesMetadata' as it is up-to-date.
+Resolve mutations for :shared:compileCommonMainKotlinMetadata (Thread[Execution worker,5,main]) started.
+:shared:compileCommonMainKotlinMetadata (Thread[Execution worker,5,main]) started.
+
+> Task :shared:compileCommonMainKotlinMetadata FAILED
+Build cache key for task ':shared:compileCommonMainKotlinMetadata' is 4257089642cb1556c8749ae838b793ad
+Task ':shared:compileCommonMainKotlinMetadata' is not up-to-date because:
+  Task has failed previously.
+The input changes require a full rebuild for incremental task ':shared:compileCommonMainKotlinMetadata'.
+file or directory '/Users/suechangwong/Documents/workspace/BeatsRunner/BeatsRunner-app/shared/build/generated/sqldelight/code/BeatRunnerDatabase/commonMain', not found
+file or directory '/Users/suechangwong/Documents/workspace/BeatsRunner/BeatsRunner-app/shared/build/generated/sqldelight/code/BeatRunnerDatabase/commonMain', not found
+file or directory '/Users/suechangwong/Documents/workspace/BeatsRunner/BeatsRunner-app/shared/build/generated/sqldelight/code/BeatRunnerDatabase/commonMain', not found
+w: KLIB resolver: Skipping '/Users/suechangwong/Documents/workspace/BeatsRunner/BeatsRunner-app/shared/build/kotlinTransformedMetadataLibraries/commonMain/org.jetbrains.kotlin-kotlin-stdlib-2.2.20-commonMain-Y8sbrw.klib'. Incompatible ABI version. The current default is '1.201.0', found '2.2.0'. The library was produced by '2.2.20-Beta2-71' compiler.
+e: KLIB resolver: Could not find "/Users/suechangwong/Documents/workspace/BeatsRunner/BeatsRunner-app/shared/build/kotlinTransformedMetadataLibraries/commonMain/org.jetbrains.kotlin-kotlin-stdlib-2.2.20-commonMain-Y8sbrw.klib" in [/Users/suechangwong/Library/Application Support/kotlin/daemon]
+Finished executing kotlin compiler using DAEMON strategy
+
+[Incubating] Problems report is available at: file:///Users/suechangwong/Documents/workspace/BeatsRunner/BeatsRunner-app/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':shared:compileCommonMainKotlinMetadata'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.14/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 3s
+2 actionable tasks: 1 executed, 1 up-to-date
+Watched directory hierarchies: [/Users/suechangwong/Documents/workspace/BeatsRunner/BeatsRunner-app]
