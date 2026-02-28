@@ -77,5 +77,6 @@ build_*.txt
 # ===========================
 iosApp/.build/
 iosApp/Pods/
-iosApp/*.xcworkspace/xcuserdata/
-iosApp/*.xcodeproj/xcuserdata/
+xcuserdata/
+*.xcuserstate
+*.xcscheme
