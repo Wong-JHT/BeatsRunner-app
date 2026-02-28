@@ -1,17 +1,81 @@
+# ===========================
+# Gradle
+# ===========================
+.gradle/
+gradle-wrapper.jar
+
+# ===========================
+# Build outputs
+# ===========================
+/build/
+/*/build/
+**/build/
+
+# ===========================
+# Android / IntelliJ IDEA
+# ===========================
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
 local.properties
+.idea/caches/
+.idea/libraries/
+.idea/modules.xml
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+.idea/.gitignore
+.idea/.name
+.idea/AndroidProjectSystem.xml
+.idea/appInsightsSettings.xml
+.idea/compiler.xml
+.idea/deploymentTargetSelector.xml
+.idea/deviceManager.xml
+.idea/gradle.xml
+.idea/markdown.xml
+.idea/material_theme_project_new.xml
+.idea/migrations.xml
+.idea/misc.xml
+.idea/runConfigurations.xml
+.idea/studiobot.xml
+.idea/vcs.xml
+.idea/xcode.xml
+.idea/shelf/
+
+# ===========================
+# Kotlin metadata / caches
+# ===========================
+.kotlin/
+
+# ===========================
+# OS-specific
+# ===========================
+.DS_Store
+Thumbs.db
+
+# ===========================
+# Captures and profiling
+# ===========================
+/captures
 *.hprof
+
+# ===========================
+# External native build
+# ===========================
+.externalNativeBuild/
+.cxx/
+
+# ===========================
+# Log and temp files
+# ===========================
 *.log
+*.txt
+dependencies*.txt
+build_*.log
+build_*.txt
+
+# ===========================
+# iOS
+# ===========================
+iosApp/.build/
+iosApp/Pods/
+iosApp/*.xcworkspace/xcuserdata/
+iosApp/*.xcodeproj/xcuserdata/
