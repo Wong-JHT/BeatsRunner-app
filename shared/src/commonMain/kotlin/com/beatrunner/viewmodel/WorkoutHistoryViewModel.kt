@@ -53,7 +53,7 @@ class WorkoutHistoryViewModel(
             _error.value = null
             currentPage = 1
             
-            val result = backendApi.getWorkoutSessions(page = 1, pageSize = pageSize)
+            val result = backendApi.getWorkoutSessions(page = 1, size = pageSize)
             
             result.onSuccess { response ->
                 _workoutSessions.value = response.data
@@ -76,7 +76,7 @@ class WorkoutHistoryViewModel(
             _isLoadingMore.value = true
             currentPage++
             
-            val result = backendApi.getWorkoutSessions(page = currentPage, pageSize = pageSize)
+            val result = backendApi.getWorkoutSessions(page = currentPage, size = pageSize)
             
             result.onSuccess { response ->
                 val currentSessions = _workoutSessions.value.toMutableList()

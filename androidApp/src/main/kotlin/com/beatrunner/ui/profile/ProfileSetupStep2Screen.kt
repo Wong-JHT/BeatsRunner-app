@@ -31,12 +31,31 @@ private val FieldBackground = Color(0xFF1B241E)
 private val FieldBorder = Color(0xFF26332A)
 private val TextGray = Color(0xFFA0AAB2)
 
-data class FitnessLevelOption(
+sealed class FitnessLevelOption(
     val id: String,
     val title: String,
     val description: String,
     val icon: ImageVector
-)
+) {
+    object Beginner : FitnessLevelOption(
+        id = "BEGINNER",
+        title = "BEGINNER",
+        description = "I'm new to running or getting back into it.",
+        icon = Icons.Default.DirectionsWalk
+    )
+    object Intermediate : FitnessLevelOption(
+        id = "INTERMEDIATE",
+        title = "INTERMEDIATE",
+        description = "I run occasionally and want to improve.",
+        icon = Icons.Default.DirectionsRun
+    )
+    object Advanced : FitnessLevelOption(
+        id = "ADVANCED",
+        title = "ADVANCED",
+        description = "I'm an experienced runner training for goals.",
+        icon = Icons.Default.Bolt
+    )
+}
 
 @Composable
 fun ProfileSetupStep2Screen(
@@ -52,24 +71,9 @@ fun ProfileSetupStep2Screen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     val options = listOf(
-        FitnessLevelOption(
-            id = "BEGINNER",
-            title = "BEGINNER",
-            description = "I'm new to running or getting back into it.",
-            icon = Icons.Default.DirectionsWalk
-        ),
-        FitnessLevelOption(
-            id = "INTERMEDIATE",
-            title = "INTERMEDIATE",
-            description = "I run occasionally and want to improve.",
-            icon = Icons.Default.DirectionsRun
-        ),
-        FitnessLevelOption(
-            id = "ADVANCED",
-            title = "ADVANCED",
-            description = "I'm an experienced runner training for goals.",
-            icon = Icons.Default.Bolt
-        )
+        FitnessLevelOption.Beginner,
+        FitnessLevelOption.Intermediate,
+        FitnessLevelOption.Advanced
     )
 
     Box(modifier = modifier.fillMaxSize().background(DarkBackground)) {

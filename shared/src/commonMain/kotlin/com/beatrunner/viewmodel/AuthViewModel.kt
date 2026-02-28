@@ -41,6 +41,16 @@ class AuthViewModel(
     private val _userProfile = MutableStateFlow<UserProfileData?>(null)
     val userProfile: StateFlow<UserProfileData?> = _userProfile.asStateFlow()
     
+    // We get isBasicInfoCompleted directly from auth response initially, but also derive from profile
+    private val _isBasicInfoCompleted = MutableStateFlow<Boolean?>(tokenManager.getBasicInfoCompleted())
+    val isBasicInfoCompleted: StateFlow<Boolean?> = _isBasicInfoCompleted.asStateFlow()
+    
+    private val _isFitnessLevelCompleted = MutableStateFlow<Boolean?>(tokenManager.getFitnessLevelCompleted())
+    val isFitnessLevelCompleted: StateFlow<Boolean?> = _isFitnessLevelCompleted.asStateFlow()
+    
+    private val _isFitnessGoalCompleted = MutableStateFlow<Boolean?>(tokenManager.getFitnessGoalCompleted())
+    val isFitnessGoalCompleted: StateFlow<Boolean?> = _isFitnessGoalCompleted.asStateFlow()
+    
     private val _currentUsername = MutableStateFlow(tokenManager.getUsername())
     val currentUsername: StateFlow<String?> = _currentUsername.asStateFlow()
     
@@ -127,6 +137,9 @@ class AuthViewModel(
         tokenManager.clearAuthData()
         _isLoggedIn.value = false
         _userProfile.value = null
+        _isBasicInfoCompleted.value = null
+        _isFitnessLevelCompleted.value = null
+        _isFitnessGoalCompleted.value = null
         _currentUsername.value = null
         _authState.value = AuthState.Idle
     }
@@ -139,9 +152,38 @@ class AuthViewModel(
             val result = backendApi.getUserProfile()
             result.onSuccess { profile ->
                 _userProfile.value = profile
+                
+                // Update basic info status based on profile fields
+                val isCompleted = profile.completionStatus.isBasicInfoCompleted
+                _isBasicInfoCompleted.value = isCompleted
+                tokenManager.saveBasicInfoCompleted(isCompleted)
+                
+                val isFitnessCompleted = profile.completionStatus.isFitnessLevelCompleted
+                _isFitnessLevelCompleted.value = isFitnessCompleted
+                tokenManager.saveFitnessLevelCompleted(isFitnessCompleted)
+                
+                val isGoalCompleted = profile.completionStatus.isFitnessGoalCompleted
+                _isFitnessGoalCompleted.value = isGoalCompleted
+                tokenManager.saveFitnessGoalCompleted(isGoalCompleted)
+                
+                // Update username from profile if available
+                val displayName = profile.nickname ?: profile.accountId?.take(8) ?: _currentUsername.value ?: "User"
+                _currentUsername.value = displayName
+                tokenManager.saveUsername(displayName)
             }.onFailure { error ->
                 // Profile load failed, but user is still logged in
                 println("Failed to load user profile: ${error.message}")
+                
+                // If it's still null (no cache), we might want to default to false to let user continue
+                if (_isBasicInfoCompleted.value == null) {
+                    _isBasicInfoCompleted.value = tokenManager.getBasicInfoCompleted() ?: false
+                }
+                if (_isFitnessLevelCompleted.value == null) {
+                    _isFitnessLevelCompleted.value = tokenManager.getFitnessLevelCompleted() ?: false
+                }
+                if (_isFitnessGoalCompleted.value == null) {
+                    _isFitnessGoalCompleted.value = tokenManager.getFitnessGoalCompleted() ?: false
+                }
             }
         }
     }
@@ -150,23 +192,56 @@ class AuthViewModel(
      * Update user profile
      */
     suspend fun updateProfile(
-        height: Int? = null,
+        height: Double? = null,
         weight: Double? = null,
-        age: Int? = null,
+        birthday: String? = null,
+        gender: Int? = null,
         nickname: String? = null,
-        avatar: String? = null
+        avatar: String? = null,
+        fitnessLevel: String? = null,
+        fitnessGoal: String? = null
     ): Result<UserProfileData> {
+        if (fitnessLevel != null && fitnessLevel !in listOf("BEGINNER", "INTERMEDIATE", "ADVANCED")) {
+            return Result.failure(IllegalArgumentException("Invalid fitnessLevel. Must be BEGINNER, INTERMEDIATE, or ADVANCED."))
+        }
+        
+        if (fitnessGoal != null && fitnessGoal !in listOf("ENDURANCE", "FAT_BURN", "SPEED", "RECOVERY")) {
+            return Result.failure(IllegalArgumentException("Invalid fitnessGoal. Must be ENDURANCE, FAT_BURN, SPEED, or RECOVERY."))
+        }
+
         val request = UpdateProfileRequest(
             height = height,
             weight = weight,
-            age = age,
+            birthday = birthday,
+            gender = gender,
             nickname = nickname,
-            avatar = avatar
+            avatar = avatar,
+            fitnessLevel = fitnessLevel,
+            fitnessGoal = fitnessGoal
         )
         
         val result = backendApi.updateUserProfile(request)
         result.onSuccess { updatedProfile ->
             _userProfile.value = updatedProfile
+            
+            // Update basic info status
+            val isCompleted = updatedProfile.completionStatus.isBasicInfoCompleted
+            _isBasicInfoCompleted.value = isCompleted
+            tokenManager.saveBasicInfoCompleted(isCompleted)
+            
+            val isFitnessCompleted = updatedProfile.completionStatus.isFitnessLevelCompleted
+            _isFitnessLevelCompleted.value = isFitnessCompleted
+            tokenManager.saveFitnessLevelCompleted(isFitnessCompleted)
+            
+            val isGoalCompleted = updatedProfile.completionStatus.isFitnessGoalCompleted
+            _isFitnessGoalCompleted.value = isGoalCompleted
+            tokenManager.saveFitnessGoalCompleted(isGoalCompleted)
+            
+            // Update username if nickname was updated
+            updatedProfile.nickname?.let { newNickname ->
+                _currentUsername.value = newNickname
+                tokenManager.saveUsername(newNickname)
+            }
         }
         
         return result
@@ -188,5 +263,21 @@ class AuthViewModel(
      */
     fun resetAuthState() {
         _authState.value = AuthState.Idle
+    }
+    
+    /**
+     * Skip fitness level setup locally
+     */
+    fun skipFitnessLevelSetup() {
+        _isFitnessLevelCompleted.value = true
+        tokenManager.saveFitnessLevelCompleted(true)
+    }
+    
+    /**
+     * Skip fitness goal setup locally
+     */
+    fun skipFitnessGoalSetup() {
+        _isFitnessGoalCompleted.value = true
+        tokenManager.saveFitnessGoalCompleted(true)
     }
 }

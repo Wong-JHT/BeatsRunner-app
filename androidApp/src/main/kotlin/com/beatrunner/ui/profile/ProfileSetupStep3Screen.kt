@@ -32,12 +32,37 @@ private val FieldBackground = Color(0xFF1B241E)
 private val FieldBorder = Color(0xFF26332A)
 private val TextGray = Color(0xFFA0AAB2)
 
-data class FitnessGoalOption(
+sealed class FitnessGoalOption(
     val id: String,
     val title: String,
     val description: String,
     val icon: ImageVector
-)
+) {
+    object Endurance : FitnessGoalOption(
+        id = "ENDURANCE",
+        title = "ENDURANCE",
+        description = "Build stamina and run longer distances.",
+        icon = Icons.Default.Favorite
+    )
+    object FatBurn : FitnessGoalOption(
+        id = "FAT_BURN",
+        title = "FAT BURN",
+        description = "Maximize calorie burn with varied intensity.",
+        icon = Icons.Default.LocalFireDepartment
+    )
+    object Speed : FitnessGoalOption(
+        id = "SPEED",
+        title = "SPEED",
+        description = "Increase pace and improve race times.",
+        icon = Icons.Default.DirectionsRun
+    )
+    object Recovery : FitnessGoalOption(
+        id = "RECOVERY",
+        title = "RECOVERY",
+        description = "Light sessions to help muscles recover.",
+        icon = Icons.Default.SelfImprovement
+    )
+}
 
 @Composable
 fun ProfileSetupStep3Screen(
@@ -53,30 +78,10 @@ fun ProfileSetupStep3Screen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     val options = listOf(
-        FitnessGoalOption(
-            id = "ENDURANCE",
-            title = "ENDURANCE",
-            description = "Build stamina and run longer distances.",
-            icon = Icons.Default.Favorite
-        ),
-        FitnessGoalOption(
-            id = "FAT_BURN",
-            title = "FAT BURN",
-            description = "Maximize calorie burn with varied intensity.",
-            icon = Icons.Default.LocalFireDepartment
-        ),
-        FitnessGoalOption(
-            id = "SPEED",
-            title = "SPEED",
-            description = "Increase pace and improve race times.",
-            icon = Icons.Default.DirectionsRun
-        ),
-        FitnessGoalOption(
-            id = "RECOVERY",
-            title = "RECOVERY",
-            description = "Light sessions to help muscles recover.",
-            icon = Icons.Default.SelfImprovement
-        )
+        FitnessGoalOption.Endurance,
+        FitnessGoalOption.FatBurn,
+        FitnessGoalOption.Speed,
+        FitnessGoalOption.Recovery
     )
 
     Box(modifier = modifier.fillMaxSize().background(DarkBackground)) {

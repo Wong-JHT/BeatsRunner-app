@@ -2,59 +2,63 @@ package com.beatrunner.data.network
 
 import kotlinx.serialization.Serializable
 
-/**
- * User registration request
- * Supports multiple identity types: email, phone, apple, wechat
- */
+/** User registration request Supports multiple identity types: email, phone, apple, wechat */
 @Serializable
 data class RegisterRequest(
-    val identityType: String, // email, phone, apple, wechat
-    val identifier: String, // 邮箱、手机号、Apple Sub、OpenID
-    val password: String? = null,
-    val nickname: String? = null,
-    val extraData: String? = null // JSON for third-party auth
+        val identityType: String, // email, phone, apple, wechat
+        val identifier: String, // 邮箱、手机号、Apple Sub、OpenID
+        val password: String? = null,
+        val nickname: String? = null,
+        val extraData: String? = null // JSON for third-party auth
 )
 
-/**
- * User login request
- */
+/** User login request */
 @Serializable
 data class LoginRequest(
-    val identifier: String,
-    val password: String,
-    val identityType: String = "email"
+        val identifier: String,
+        val password: String,
+        val identityType: String = "email"
 )
 
-/**
- * Authentication response containing JWT token
- */
+/** Authentication response containing JWT token */
 @Serializable
 data class AuthResponse(
-    val token: String,
-    val accountId: String,
-    val profileCompleted: Boolean
+        val token: String,
+        val accountId: String
 )
 
-/**
- * User profile data matching backend schema
- */
+/** Completion status of user profile */
+@Serializable
+data class UserProfileCompletionStatus(
+        val isBasicInfoCompleted: Boolean = false,
+        val isFitnessLevelCompleted: Boolean = false,
+        val isFitnessGoalCompleted: Boolean = false
+)
+
+/** User profile data matching backend schema */
 @Serializable
 data class UserProfileData(
-    val height: Int? = null,      // cm
-    val weight: Double? = null,   // kg  
-    val age: Int? = null,
-    val nickname: String? = null,
-    val avatar: String? = null
+        val accountId: String? = null,
+        val height: Double? = null, // cm
+        val weight: Double? = null, // kg
+        val birthday: String? = null,
+        val gender: Int? = null,
+        val nickname: String? = null,
+        val avatar: String? = null,
+        val fitnessLevel: String? = null,
+        val fitnessGoal: String? = null,
+        val completionStatus: UserProfileCompletionStatus = UserProfileCompletionStatus()
 )
 
-/**
- * Update user profile request
- */
+/** Update user profile request */
 @Serializable
 data class UpdateProfileRequest(
-    val height: Int? = null,
-    val weight: Double? = null,
-    val age: Int? = null,
-    val nickname: String? = null,
-    val avatar: String? = null
+        val height: Double? = null,
+        val weight: Double? = null,
+        val birthday: String? = null,
+        val gender: Int? = null,
+        val nickname: String? = null,
+        val avatar: String? = null,
+        val fitnessLevel: String? = null,
+        val fitnessGoal: String? = null
 )

@@ -1,11 +1,10 @@
 package com.beatrunner.viewmodel
 
 import com.beatrunner.data.network.BackendApi
-import com.beatrunner.data.network.WorkoutSessionRequest
-import com.beatrunner.data.network.FitnessLevel
-import com.beatrunner.data.network.UserProfile
+import com.beatrunner.data.network.StartWorkoutRequest
 import com.beatrunner.data.network.WorkoutDataPoint
 import com.beatrunner.data.network.WorkoutMusicData
+import com.beatrunner.data.network.WorkoutSessionRequest
 import com.beatrunner.domain.bluetooth.BluetoothConnectionState
 import com.beatrunner.domain.bluetooth.BluetoothModels
 import com.beatrunner.domain.bluetooth.FtmsManager
@@ -14,6 +13,7 @@ import com.beatrunner.domain.music.MusicObserver
 import com.beatrunner.domain.music.SongInfo
 import com.beatrunner.domain.music.isValid
 import com.beatrunner.util.currentTimeMillis
+import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -23,7 +23,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
-import kotlin.time.ExperimentalTime
 
 /** ViewModel for workout screen Coordinates music monitoring, AI coaching, and treadmill control */
 @OptIn(ExperimentalTime::class)
@@ -51,7 +50,8 @@ class WorkoutViewModel(
     val currentSong: StateFlow<SongInfo?> = _currentSong.asStateFlow()
 
     private val _audioVisualizationData = MutableStateFlow<AudioVisualizationData?>(null)
-    val audioVisualizationData: StateFlow<AudioVisualizationData?> = _audioVisualizationData.asStateFlow()
+    val audioVisualizationData: StateFlow<AudioVisualizationData?> =
+            _audioVisualizationData.asStateFlow()
 
     private val _workoutData = MutableStateFlow<BluetoothModels.WorkoutData?>(null)
     val workoutData: StateFlow<BluetoothModels.WorkoutData?> = _workoutData.asStateFlow()
@@ -86,16 +86,11 @@ class WorkoutViewModel(
     private val workoutMusics = mutableListOf<WorkoutMusicData>()
     private var lastUploadedSong: SongInfo? = null
 
-    // User profile (TODO: load from preferences/database)
-    private val userProfile =
-            UserProfile(
-                    age = 30,
-                    weight = 70f,
-                    height = 175f,
-                    fitnessLevel = FitnessLevel.INTERMEDIATE
-            )
+    // User profile weight for calories calculation (TODO: load from preferences/database)
+    private val userWeightKg = 70f
 
     private var aiUpdateJob: Job? = null
+    private var wsJob: Job? = null
 
     init {
         observeConnections()
@@ -173,12 +168,12 @@ class WorkoutViewModel(
                     // Record data point
                     val offsetSeconds = ((currentTimeMillis() - workoutStartTime) / 1000).toInt()
                     workoutDataPoints.add(
-                        WorkoutDataPoint(
-                            offsetSeconds = offsetSeconds,
-                            speed = speed.toDouble(),
-                            incline = incline.toDouble(),
-                            heartRate = data.heartRate
-                        )
+                            WorkoutDataPoint(
+                                    offsetSeconds = offsetSeconds,
+                                    speed = speed.toDouble(),
+                                    incline = incline.toDouble(),
+                                    heartRate = data.heartRate
+                            )
                     )
                 }
             }
@@ -195,7 +190,7 @@ class WorkoutViewModel(
                 }
             }
         }
-        
+
         // Observe audio visualization data
         scope.launch {
             musicObserver.observeAudioVisualization().collect { data ->
@@ -207,15 +202,16 @@ class WorkoutViewModel(
     /** Handle new song detection */
     private suspend fun handleNewSong(song: SongInfo) {
         // Check if this is actually a new song (different from last uploaded)
-        val isSongChanged = lastUploadedSong == null || 
-            lastUploadedSong?.title != song.title || 
-            lastUploadedSong?.artist != song.artist
-        
+        val isSongChanged =
+                lastUploadedSong == null ||
+                        lastUploadedSong?.title != song.title ||
+                        lastUploadedSong?.artist != song.artist
+
         // Only process if song has changed
         if (!isSongChanged) {
             return
         }
-        
+
         _currentSong.value = song
 
         // Track song if workout is active
@@ -225,74 +221,45 @@ class WorkoutViewModel(
 
         // Analyze song if BPM is missing (only during active workout)
         if (_isWorkoutActive.value && !_isPaused.value) {
-            if (song.bpm == null) {
-                val result = backendApi.analyzeSong(song)
-                result.onSuccess { analysis ->
-                    val updatedSong = song.copy(bpm = analysis.bpm)
-                    _currentSong.value = updatedSong
-                    addCoachMessage("🎵 检测到新歌曲: ${song.title} (${analysis.bpm} BPM)")
-                    
-                    // Upload music data with analyzed BPM
-                    uploadMusicData(updatedSong)
-                }
-            } else {
-                addCoachMessage("🎵 检测到新歌曲: ${song.title} (${song.bpm} BPM)")
-                
-                // Upload music data
-                uploadMusicData(song)
-            }
+            addCoachMessage("🎵 检测到新歌曲: ${song.title} (${song.bpm ?: "?"} BPM)")
 
-            // Request AI command
-//            requestAICommand()
+            // Upload music data
+            uploadMusicData(song)
+
+            // Notify AI coach via WebSocket
+            scope.launch {
+                backendApi.sendMusicStateToCoach(
+                        com.beatrunner.data.network.WsMusicState(
+                                title = song.title,
+                                artist = song.artist,
+                                bpm = song.bpm ?: 0 // Or null if your API allows
+                        )
+                )
+            }
         }
     }
-    
+
     /** Upload music data to backend (only called during active workout when song changes) */
     private fun uploadMusicData(song: SongInfo) {
         val durationSeconds = (song.duration / 1000).toInt()
         val playedAt =
-            kotlinx.datetime.Instant.fromEpochMilliseconds(currentTimeMillis()).toString()
+                kotlinx.datetime.Instant.fromEpochMilliseconds(currentTimeMillis()).toString()
         workoutMusics.add(
-            WorkoutMusicData(
-                title = song.title,
-                artist = song.artist,
-                bpm = song.bpm ?: 0,
-                genre = "Unknown", // Genre is not available in SongInfo yet
-                playedAt = playedAt,
-                durationSeconds = durationSeconds
-            )
+                WorkoutMusicData(
+                        title = song.title,
+                        artist = song.artist,
+                        bpm = song.bpm ?: 0,
+                        genre = "Unknown", // Genre is not available in SongInfo yet
+                        playedAt = playedAt,
+                        durationSeconds = durationSeconds
+                )
         )
-        
+
         // Update last uploaded song
         lastUploadedSong = song
     }
 
-    /** Request AI coaching command */
-    private suspend fun requestAICommand() {
-        val song = _currentSong.value ?: return
-        val data = _workoutData.value
 
-        val result =
-                backendApi.getAICommand(
-                        songInfo = song,
-                        currentSpeed = data?.speed ?: 0f,
-                        currentIncline = data?.incline ?: 0f,
-                        heartRate = data?.heartRate,
-                        userProfile = userProfile
-                )
-
-        result
-                .onSuccess { response ->
-                    // Send command to treadmill
-                    ftmsManager.sendCommand(response.command)
-
-                    // Display coach message
-                    addCoachMessage(response.coachMessage, isAI = true)
-                }
-                .onFailure { error ->
-                    addCoachMessage("❌ AI 指令获取失败: ${error.message}", isError = true)
-                }
-    }
 
     /** Start workout session */
     suspend fun startWorkout() {
@@ -313,10 +280,19 @@ class WorkoutViewModel(
             _isWorkoutActive.value = true
             workoutStartTime = currentTimeMillis()
             resetWorkoutStatistics()
-            addCoachMessage("🏃 训练开始！跟随音乐节奏，享受运动吧！")
 
-            // Start periodic AI updates
-            startPeriodicAIUpdates()
+            val startTimeIso =
+                    kotlinx.datetime.Instant.fromEpochMilliseconds(workoutStartTime).toString()
+            val result = backendApi.startWorkoutSession(StartWorkoutRequest(startTimeIso))
+            result
+                    .onSuccess { sessionDetail ->
+                        _sessionId.value = sessionDetail.id
+                        addCoachMessage("🏃 训练开始！跟随音乐节奏，享受运动吧！(Session: ${sessionDetail.id})")
+                    }
+                    .onFailure { e -> addCoachMessage("❌ 启动记录失败: ${e.message}", isError = true) }
+
+            // Connect to real-time coach via WebSocket
+            startWebSocketCoach()
         } catch (e: Exception) {
             addCoachMessage("❌ 启动失败: ${e.message}", isError = true)
         }
@@ -331,9 +307,6 @@ class WorkoutViewModel(
 
         // Pause treadmill
         ftmsManager.pause()
-
-        // Pause AI updates
-        aiUpdateJob?.cancel()
 
         addCoachMessage("⏸️ 训练已暂停")
     }
@@ -350,9 +323,6 @@ class WorkoutViewModel(
         // Resume treadmill
         ftmsManager.resume()
 
-        // Restart AI updates
-        startPeriodicAIUpdates()
-
         addCoachMessage("▶️ 训练已恢复")
     }
 
@@ -364,38 +334,50 @@ class WorkoutViewModel(
         // Calculate workout summary
         val endTime = currentTimeMillis()
         val actualDuration = ((endTime - workoutStartTime - totalPausedDuration) / 1000).toInt()
-        val startTimeIso = kotlinx.datetime.Instant.fromEpochMilliseconds(workoutStartTime).toString()
+        val startTimeIso =
+                kotlinx.datetime.Instant.fromEpochMilliseconds(workoutStartTime).toString()
         val endTimeIso = kotlinx.datetime.Instant.fromEpochMilliseconds(endTime).toString()
 
         val createWorkoutRequest =
-            WorkoutSessionRequest(
-                startTime = startTimeIso,
-                endTime = endTimeIso,
-                durationSeconds = actualDuration,
-                distanceMeters = (totalDistance * 1000).toDouble(), // Convert km to meters
-                caloriesBurned = calculateCalories(actualDuration, totalDistance).toDouble(),
-                avgSpeed =
-                    if (speedSampleCount > 0) (totalSpeedSamples / speedSampleCount).toDouble()
-                    else 0.0,
-                maxSpeed = maxSpeed.toDouble(),
-                avgIncline =
-                    if (inclineSampleCount > 0) (totalInclineSamples / inclineSampleCount).toDouble()
-                    else 0.0,
-                avgHeartRate =
-                    if (heartRateSampleCount > 0)
-                        totalHeartRateSamples / heartRateSampleCount
-                    else null,
-                maxHeartRate = maxHeartRate,
-                musics = workoutMusics,
-                points = workoutDataPoints
-            )
+                WorkoutSessionRequest(
+                        startTime = startTimeIso,
+                        endTime = endTimeIso,
+                        durationSeconds = actualDuration,
+                        distanceMeters = (totalDistance * 1000).toDouble(), // Convert km to meters
+                        caloriesBurned =
+                                calculateCalories(actualDuration, totalDistance).toDouble(),
+                        avgSpeed =
+                                if (speedSampleCount > 0)
+                                        (totalSpeedSamples / speedSampleCount).toDouble()
+                                else 0.0,
+                        maxSpeed = maxSpeed.toDouble(),
+                        avgIncline =
+                                if (inclineSampleCount > 0)
+                                        (totalInclineSamples / inclineSampleCount).toDouble()
+                                else 0.0,
+                        avgHeartRate =
+                                if (heartRateSampleCount > 0)
+                                        totalHeartRateSamples / heartRateSampleCount
+                                else null,
+                        maxHeartRate = maxHeartRate,
+                        musics = workoutMusics,
+                        points = workoutDataPoints
+                )
 
         // Upload workout data
-        backendApi.createWorkoutSession(createWorkoutRequest).onSuccess { sessionId ->
-             _sessionId.value = sessionId
-             addCoachMessage("✅ 训练已上传！Session ID: $sessionId")
-        }.onFailure { error ->
-            addCoachMessage("⚠️ 数据上传失败: ${error.message}", isError = true)
+        val sessionId = _sessionId.value
+        if (sessionId != null) {
+            backendApi
+                    .finishWorkoutSession(sessionId, createWorkoutRequest)
+                    .onSuccess { sessionDetail ->
+                        addCoachMessage("✅ 训练已上传！Session ID: ${sessionDetail.id}")
+                        _sessionId.value = null
+                    }
+                    .onFailure { error ->
+                        addCoachMessage("⚠️ 数据上传失败: ${error.message}", isError = true)
+                    }
+        } else {
+            addCoachMessage("⚠️ 未找到 Session ID，数据未能上传", isError = true)
         }
 
         // Stop treadmill
@@ -407,8 +389,12 @@ class WorkoutViewModel(
         musicObserver.setVisualizationEnabled(false)
         musicObserver.stopListening()
 
+        // Disconnect coach
+        wsJob?.cancel()
+        scope.launch { backendApi.disconnectCoachWebSocket() }
+
         addCoachMessage("✅ 训练结束！干得漂亮！")
-        
+
         // Update state last to avoid cancelling scope during network request
         _isWorkoutActive.value = false
     }
@@ -426,13 +412,27 @@ class WorkoutViewModel(
         _musicPermissionGranted.value = musicObserver.hasPermission()
     }
 
-    /** Start periodic AI command updates (every 10 seconds) */
-    private fun startPeriodicAIUpdates() {
-        aiUpdateJob =
+    /** Start realtime AI coaching via WebSocket */
+    private fun startWebSocketCoach() {
+        wsJob?.cancel()
+        wsJob =
                 scope.launch {
-                    while (_isWorkoutActive.value) {
-                        delay(10000) // 10 seconds
-//                        requestAICommand()
+                    try {
+                        backendApi.connectCoachWebSocket().collect { aiResponse ->
+                            // Make command
+                            val command =
+                                    BluetoothModels.TreadmillCommand(
+                                            targetSpeed = aiResponse.speed,
+                                            targetIncline = aiResponse.incline
+                                    )
+                            // Send command to treadmill
+                            ftmsManager.sendCommand(command)
+
+                            // Display coach message
+                            addCoachMessage(aiResponse.coachMessage, isAI = true)
+                        }
+                    } catch (e: Exception) {
+                        addCoachMessage("⚠️ AI 教练连线中断", isError = true)
                     }
                 }
     }
@@ -500,8 +500,7 @@ class WorkoutViewModel(
      */
     private fun calculateCalories(durationSeconds: Int, distanceKm: Float): Int {
         // Very rough estimation
-        // 1 km run is approx 1 kcal per kg of body weight
-        val caloriesPerKm = userProfile.weight * 1.03f
+        val caloriesPerKm = userWeightKg * 1.03f
         return (distanceKm * caloriesPerKm).toInt()
     }
 }

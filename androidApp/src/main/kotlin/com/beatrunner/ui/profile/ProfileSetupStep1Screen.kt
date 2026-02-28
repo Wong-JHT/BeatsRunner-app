@@ -35,6 +35,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.beatrunner.viewmodel.AuthViewModel
 import kotlinx.coroutines.launch
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.SelectableDates
+import androidx.compose.material3.DatePickerDefaults
+import androidx.compose.material3.TextButton
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 // Colors matching the design
 private val DarkBackground = Color(0xFF131A16)
@@ -57,15 +67,34 @@ fun ProfileSetupStep1Screen(
     var nickname by remember { mutableStateOf("") }
     var height by remember { mutableStateOf("") }
     var weight by remember { mutableStateOf("") }
-    var gender by remember { mutableStateOf("") }
+    var gender by remember { mutableStateOf<Int?>(null) }
     var birthday by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    
+    val calendar = Calendar.getInstance()
+    calendar.timeZone = java.util.TimeZone.getTimeZone("UTC")
+    calendar.add(Calendar.YEAR, -18)
+    val maxDateMillis = calendar.timeInMillis
+    
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = maxDateMillis,
+        yearRange = 1920..calendar.get(Calendar.YEAR),
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                return utcTimeMillis <= maxDateMillis
+            }
+            override fun isSelectableYear(year: Int): Boolean {
+                return year >= 1920 && year <= calendar.get(Calendar.YEAR)
+            }
+        }
+    )
 
     val canContinue = nickname.isNotBlank() &&
-            height.isNotBlank() &&
-            weight.isNotBlank() &&
-            gender.isNotBlank() &&
+            height.isNotBlank() && height.toDoubleOrNull() != null &&
+            weight.isNotBlank() && weight.toDoubleOrNull() != null &&
+            gender != null &&
             birthday.isNotBlank() &&
             !isLoading
 
@@ -180,10 +209,15 @@ fun ProfileSetupStep1Screen(
                     Text(text = "Height (cm)", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Medium, modifier = Modifier.padding(bottom = 8.dp))
                     ProfileTextField(
                             value = height,
-                            onValueChange = { height = it.filter { char -> char.isDigit() }.take(3) },
+                            onValueChange = { newValue ->
+                                val filtered = newValue.filter { char -> char.isDigit() || char == '.' }
+                                if (filtered.count { it == '.' } <= 1) {
+                                    height = filtered.take(5)
+                                }
+                            },
                             placeholder = "175",
                             suffix = "CM",
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword, imeAction = ImeAction.Next),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next),
                             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
                     )
                 }
@@ -191,10 +225,15 @@ fun ProfileSetupStep1Screen(
                     Text(text = "Weight (kg)", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Medium, modifier = Modifier.padding(bottom = 8.dp))
                     ProfileTextField(
                             value = weight,
-                            onValueChange = { weight = it.filter { char -> char.isDigit() || char == '.' }.take(5) },
+                            onValueChange = { newValue ->
+                                val filtered = newValue.filter { char -> char.isDigit() || char == '.' }
+                                if (filtered.count { it == '.' } <= 1) {
+                                    weight = filtered.take(5)
+                                }
+                            },
                             placeholder = "70",
                             suffix = "KG",
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword, imeAction = ImeAction.Next),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next),
                             keyboardActions = KeyboardActions(onNext = { focusManager.clearFocus() })
                     )
                 }
@@ -208,22 +247,22 @@ fun ProfileSetupStep1Screen(
                 GenderCard(
                         text = "Male",
                         icon = Icons.Default.Male,
-                        isSelected = gender == "Male",
-                        onClick = { gender = "Male" },
+                        isSelected = gender == 1,
+                        onClick = { gender = 1 },
                         modifier = Modifier.weight(1f)
                 )
                 GenderCard(
                         text = "Female",
                         icon = Icons.Default.Female,
-                        isSelected = gender == "Female",
-                        onClick = { gender = "Female" },
+                        isSelected = gender == 0,
+                        onClick = { gender = 0 },
                         modifier = Modifier.weight(1f)
                 )
                 GenderCard(
                         text = "Other",
                         icon = Icons.Default.Wc,
-                        isSelected = gender == "Other",
-                        onClick = { gender = "Other" },
+                        isSelected = gender == -1,
+                        onClick = { gender = -1 },
                         modifier = Modifier.weight(1f)
                 )
             }
@@ -232,25 +271,20 @@ fun ProfileSetupStep1Screen(
 
             // Birthday Field
             Text(text = "Birthday", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Medium, modifier = Modifier.padding(bottom = 8.dp))
-            ProfileTextField(
-                    value = birthday,
-                    onValueChange = { 
-                        // Note: A real app would use a DatePicker. For simplicity in UI replica, we use text or basic formatting.
-                        val digits = it.filter { char -> char.isDigit() }
-                        // format to mm/dd/yyyy
-                        val formatted = buildString {
-                            for (i in digits.indices) {
-                                if (i == 2 || i == 4) append("/")
-                                append(digits[i])
-                            }
-                        }.take(10)
-                        birthday = formatted
-                    },
-                    placeholder = "mm/dd/yyyy",
-                    trailingIcon = Icons.Default.CalendarToday,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword, imeAction = ImeAction.Done),
-                    keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
-            )
+            Box {
+                ProfileTextField(
+                        value = birthday,
+                        onValueChange = { },
+                        placeholder = "yyyy-mm-dd",
+                        trailingIcon = Icons.Default.CalendarToday,
+                        readOnly = true
+                )
+                Box(
+                        modifier = Modifier
+                                .matchParentSize()
+                                .clickable { showDatePicker = true }
+                )
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -261,6 +295,54 @@ fun ProfileSetupStep1Screen(
                         fontSize = 14.sp,
                         modifier = Modifier.padding(bottom = 16.dp)
                 )
+            }
+
+            if (showDatePicker) {
+                DatePickerDialog(
+                    onDismissRequest = { showDatePicker = false },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            datePickerState.selectedDateMillis?.let { millis ->
+                                // Use UTC to prevent local time shift since DatePicker uses UTC millis
+                                val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                                formatter.timeZone = java.util.TimeZone.getTimeZone("UTC")
+                                birthday = formatter.format(Date(millis))
+                            }
+                            showDatePicker = false
+                        }) {
+                            Text("Confirm", color = ActionGreen)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showDatePicker = false }) {
+                            Text("Cancel", color = TextGray)
+                        }
+                    },
+                    colors = DatePickerDefaults.colors(
+                        containerColor = FieldBackground,
+                    )
+                ) {
+                    DatePicker(
+                        state = datePickerState,
+                        colors = DatePickerDefaults.colors(
+                            containerColor = FieldBackground,
+                            titleContentColor = Color.White,
+                            headlineContentColor = Color.White,
+                            weekdayContentColor = TextGray,
+                            subheadContentColor = TextGray,
+                            yearContentColor = Color.White,
+                            currentYearContentColor = ActionGreen,
+                            selectedYearContentColor = Color.Black,
+                            selectedYearContainerColor = ActionGreen,
+                            dayContentColor = Color.White,
+                            disabledDayContentColor = TextGray.copy(alpha = 0.3f),
+                            selectedDayContentColor = Color.Black,
+                            selectedDayContainerColor = ActionGreen,
+                            todayContentColor = ActionGreen,
+                            todayDateBorderColor = ActionGreen
+                        )
+                    )
+                }
             }
 
             // Using layout weight to push fields to bottom and Button to the very bottom
@@ -276,7 +358,7 @@ fun ProfileSetupStep1Screen(
                         scope.launch {
                             val result = viewModel.updateProfile(
                                     nickname = nickname,
-                                    height = height.toIntOrNull(),
+                                    height = height.toDoubleOrNull(),
                                     weight = weight.toDoubleOrNull(),
                                     gender = gender,
                                     birthday = birthday
@@ -365,11 +447,13 @@ fun ProfileTextField(
         suffix: String? = null,
         trailingIcon: ImageVector? = null,
         keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
-        keyboardActions: KeyboardActions = KeyboardActions.Default
+        keyboardActions: KeyboardActions = KeyboardActions.Default,
+        readOnly: Boolean = false
 ) {
     OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
+            readOnly = readOnly,
             placeholder = { Text(placeholder, color = TextGray, fontSize = 15.sp) },
             suffix = if (suffix != null) { { Text(suffix, color = TextGray, fontSize = 14.sp, fontWeight = FontWeight.Bold) } } else null,
             trailingIcon = if (trailingIcon != null) { { Icon(trailingIcon, contentDescription = null, tint = TextGray) } } else null,
